@@ -16,8 +16,13 @@ t_CLASS = r'\.[a-zA-Z][a-zA-Z0-9]*'
 t_TEXT = r'([^#\.\{\}])+'
 t_ATTRIBUTE = r'\([a-zA-Z][a-zA-Z0-9]*(=("[^"]*"|\'[^\']*\'))?\)'
 
+# Define a rule so we can track line numbers
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
 # Ignora espaços em branco e tabulações
-t_ignore = ' \t\n'
+t_ignore = ' \t'
 
 def t_error(t):
     print('Illegal character: ', t.value[0], ' Line: ', t.lexer.lineno)

@@ -72,6 +72,10 @@ def p_class_list_multiple(p):
     'class_list : class_list class'
     p[0] = p[1] + [p[2]]
 
+# Define a rule so we can track line numbers
+def p_newline(p):
+    p.lineno += len(p.value)
+
 def p_error(p):
     print('Syntax error: ', p, ' Line: ', p.lineno)
 
