@@ -1,0 +1,269 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> tag
+Rule 1     tag -> TAG
+Rule 2     tag -> TAG ID
+Rule 3     tag -> TAG class_list
+Rule 4     tag -> TAG ID class_list
+Rule 5     tag -> TAG TEXT
+Rule 6     tag -> TAG attr_list
+Rule 7     tag -> TAG ID attr_list
+Rule 8     tag -> TAG class_list attr_list
+Rule 9     tag -> TAG ID class_list attr_list
+Rule 10    attr -> ATTRIBUTE
+Rule 11    attr -> ATTRIBUTE TEXT
+Rule 12    attr_list -> attr
+Rule 13    attr_list -> attr_list , attr
+Rule 14    class -> CLASS
+Rule 15    class_list -> class
+Rule 16    class_list -> class_list class
+
+Terminals, with rules where they appear
+
+,                    : 13
+ATTRIBUTE            : 10 11
+CLASS                : 14
+ID                   : 2 4 7 9
+TAG                  : 1 2 3 4 5 6 7 8 9
+TEXT                 : 5 11
+error                : 
+
+Nonterminals, with rules where they appear
+
+attr                 : 12 13
+attr_list            : 6 7 8 9 13
+class                : 15 16
+class_list           : 3 4 8 9 16
+tag                  : 0
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . tag
+    (1) tag -> . TAG
+    (2) tag -> . TAG ID
+    (3) tag -> . TAG class_list
+    (4) tag -> . TAG ID class_list
+    (5) tag -> . TAG TEXT
+    (6) tag -> . TAG attr_list
+    (7) tag -> . TAG ID attr_list
+    (8) tag -> . TAG class_list attr_list
+    (9) tag -> . TAG ID class_list attr_list
+
+    TAG             shift and go to state 2
+
+    tag                            shift and go to state 1
+
+state 1
+
+    (0) S' -> tag .
+
+
+
+state 2
+
+    (1) tag -> TAG .
+    (2) tag -> TAG . ID
+    (3) tag -> TAG . class_list
+    (4) tag -> TAG . ID class_list
+    (5) tag -> TAG . TEXT
+    (6) tag -> TAG . attr_list
+    (7) tag -> TAG . ID attr_list
+    (8) tag -> TAG . class_list attr_list
+    (9) tag -> TAG . ID class_list attr_list
+    (15) class_list -> . class
+    (16) class_list -> . class_list class
+    (12) attr_list -> . attr
+    (13) attr_list -> . attr_list , attr
+    (14) class -> . CLASS
+    (10) attr -> . ATTRIBUTE
+    (11) attr -> . ATTRIBUTE TEXT
+
+    $end            reduce using rule 1 (tag -> TAG .)
+    ID              shift and go to state 3
+    TEXT            shift and go to state 5
+    CLASS           shift and go to state 9
+    ATTRIBUTE       shift and go to state 10
+
+    class_list                     shift and go to state 4
+    attr_list                      shift and go to state 6
+    class                          shift and go to state 7
+    attr                           shift and go to state 8
+
+state 3
+
+    (2) tag -> TAG ID .
+    (4) tag -> TAG ID . class_list
+    (7) tag -> TAG ID . attr_list
+    (9) tag -> TAG ID . class_list attr_list
+    (15) class_list -> . class
+    (16) class_list -> . class_list class
+    (12) attr_list -> . attr
+    (13) attr_list -> . attr_list , attr
+    (14) class -> . CLASS
+    (10) attr -> . ATTRIBUTE
+    (11) attr -> . ATTRIBUTE TEXT
+
+    $end            reduce using rule 2 (tag -> TAG ID .)
+    CLASS           shift and go to state 9
+    ATTRIBUTE       shift and go to state 10
+
+    class_list                     shift and go to state 11
+    attr_list                      shift and go to state 12
+    class                          shift and go to state 7
+    attr                           shift and go to state 8
+
+state 4
+
+    (3) tag -> TAG class_list .
+    (8) tag -> TAG class_list . attr_list
+    (16) class_list -> class_list . class
+    (12) attr_list -> . attr
+    (13) attr_list -> . attr_list , attr
+    (14) class -> . CLASS
+    (10) attr -> . ATTRIBUTE
+    (11) attr -> . ATTRIBUTE TEXT
+
+    $end            reduce using rule 3 (tag -> TAG class_list .)
+    CLASS           shift and go to state 9
+    ATTRIBUTE       shift and go to state 10
+
+    attr_list                      shift and go to state 13
+    class                          shift and go to state 14
+    attr                           shift and go to state 8
+
+state 5
+
+    (5) tag -> TAG TEXT .
+
+    $end            reduce using rule 5 (tag -> TAG TEXT .)
+
+
+state 6
+
+    (6) tag -> TAG attr_list .
+    (13) attr_list -> attr_list . , attr
+
+    $end            reduce using rule 6 (tag -> TAG attr_list .)
+    ,               shift and go to state 15
+
+
+state 7
+
+    (15) class_list -> class .
+
+    CLASS           reduce using rule 15 (class_list -> class .)
+    ATTRIBUTE       reduce using rule 15 (class_list -> class .)
+    $end            reduce using rule 15 (class_list -> class .)
+
+
+state 8
+
+    (12) attr_list -> attr .
+
+    ,               reduce using rule 12 (attr_list -> attr .)
+    $end            reduce using rule 12 (attr_list -> attr .)
+
+
+state 9
+
+    (14) class -> CLASS .
+
+    CLASS           reduce using rule 14 (class -> CLASS .)
+    ATTRIBUTE       reduce using rule 14 (class -> CLASS .)
+    $end            reduce using rule 14 (class -> CLASS .)
+
+
+state 10
+
+    (10) attr -> ATTRIBUTE .
+    (11) attr -> ATTRIBUTE . TEXT
+
+    ,               reduce using rule 10 (attr -> ATTRIBUTE .)
+    $end            reduce using rule 10 (attr -> ATTRIBUTE .)
+    TEXT            shift and go to state 16
+
+
+state 11
+
+    (4) tag -> TAG ID class_list .
+    (9) tag -> TAG ID class_list . attr_list
+    (16) class_list -> class_list . class
+    (12) attr_list -> . attr
+    (13) attr_list -> . attr_list , attr
+    (14) class -> . CLASS
+    (10) attr -> . ATTRIBUTE
+    (11) attr -> . ATTRIBUTE TEXT
+
+    $end            reduce using rule 4 (tag -> TAG ID class_list .)
+    CLASS           shift and go to state 9
+    ATTRIBUTE       shift and go to state 10
+
+    attr_list                      shift and go to state 17
+    class                          shift and go to state 14
+    attr                           shift and go to state 8
+
+state 12
+
+    (7) tag -> TAG ID attr_list .
+    (13) attr_list -> attr_list . , attr
+
+    $end            reduce using rule 7 (tag -> TAG ID attr_list .)
+    ,               shift and go to state 15
+
+
+state 13
+
+    (8) tag -> TAG class_list attr_list .
+    (13) attr_list -> attr_list . , attr
+
+    $end            reduce using rule 8 (tag -> TAG class_list attr_list .)
+    ,               shift and go to state 15
+
+
+state 14
+
+    (16) class_list -> class_list class .
+
+    CLASS           reduce using rule 16 (class_list -> class_list class .)
+    ATTRIBUTE       reduce using rule 16 (class_list -> class_list class .)
+    $end            reduce using rule 16 (class_list -> class_list class .)
+
+
+state 15
+
+    (13) attr_list -> attr_list , . attr
+    (10) attr -> . ATTRIBUTE
+    (11) attr -> . ATTRIBUTE TEXT
+
+    ATTRIBUTE       shift and go to state 10
+
+    attr                           shift and go to state 18
+
+state 16
+
+    (11) attr -> ATTRIBUTE TEXT .
+
+    ,               reduce using rule 11 (attr -> ATTRIBUTE TEXT .)
+    $end            reduce using rule 11 (attr -> ATTRIBUTE TEXT .)
+
+
+state 17
+
+    (9) tag -> TAG ID class_list attr_list .
+    (13) attr_list -> attr_list . , attr
+
+    $end            reduce using rule 9 (tag -> TAG ID class_list attr_list .)
+    ,               shift and go to state 15
+
+
+state 18
+
+    (13) attr_list -> attr_list , attr .
+
+    ,               reduce using rule 13 (attr_list -> attr_list , attr .)
+    $end            reduce using rule 13 (attr_list -> attr_list , attr .)
+

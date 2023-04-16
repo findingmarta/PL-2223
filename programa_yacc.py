@@ -1,28 +1,7 @@
-import ply.lex as lex
 import ply.yacc as yacc
 
-# Definição dos tokens
-tokens = (
-    'TAG',
-    'ID',
-    'CLASS',
-    'TEXT',
-    'ATTRIBUTE',
-)
+from programa_lex import tokens
 
-# Expressões regulares para cada token
-t_TAG = r'[a-zA-Z][a-zA-Z0-9]*'
-t_ID = r'#[a-zA-Z][a-zA-Z0-9]*'
-t_CLASS = r'\.[a-zA-Z][a-zA-Z0-9]*'
-t_TEXT = r'([^#\.\{\}])+'
-t_ATTRIBUTE = r'\([a-zA-Z][a-zA-Z0-9]*(=("[^"]*"|\'[^\']*\'))?\)'
-
-# Ignora espaços em branco e tabulações
-t_ignore = ' \t'
-
-def parse_file(file_path):
-    with open(file_path, 'r') as f:
-        return f.read()
 
 # Regras de produção da gramática
 def p_tag(p):
@@ -69,9 +48,9 @@ def p_attr_with_value(p):
     'attr : ATTRIBUTE TEXT'
     p[0] = ' {}="{}"'.format(p[1][1:], p[2])
 
-def p_attr_with_quoted_value(p):
-    'attr : ATTRIBUTE QUOTED_TEXT'
-    p[0] = ' {}="{}"'.format(p[1][1:], p[2][1:-1])
+#def p_attr_with_quoted_value(p):
+#    'attr : ATTRIBUTE QUOTED_TEXT'
+#    p[0] = ' {}="{}"'.format(p[1][1:], p[2][1:-1])
 
 def p_attr_list(p):
     'attr_list : attr'
@@ -94,13 +73,17 @@ def p_class_list_multiple(p):
     p[0] = p[1] + [p[2]]
 
 def p_error(p):
-    if p:
-        print("Erro de sintaxe na entrada em linha", p.lineno)
-    else:
-        print("Erro de sintaxe no final da entrada")
+    print('Syntax error: ', p, ' Line: ', p.lineno)
 
-lexer = lex.lex()
+
+#############################################################
+
+
 parser = yacc.yacc()
+
+def parse_file(file_path):
+    with open(file_path, 'r') as f:
+        return f.read()
 
 def pug_to_html(pug_file):
     pug_code = parse_file(pug_file)
@@ -109,5 +92,4 @@ def pug_to_html(pug_file):
     return html_code
 
 if __name__ == '__main__':
-    #exemplo.pu deve ser substituido pelo nome do ficheiro pug que queremos substituir
-    print(pug_to_html('ex1.pug'))
+    print(pug_to_html('datasets/ex1.pug'))
