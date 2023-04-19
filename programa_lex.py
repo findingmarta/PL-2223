@@ -2,11 +2,15 @@ import ply.lex as lex
 
 # Definição dos tokens
 tokens = (
+    'ATTRIBUTE',
+    'ATTRIBUTE_CONDITIONAL',
+    'VIRG',
+    'PA',
+    'PF'
     'TAG',
     'ID',
     'CLASS',
     'TEXT',
-    'ATTRIBUTE',
     'IF',
     'ELSE',
     'PONTO',
@@ -14,7 +18,23 @@ tokens = (
     'VAR'
 )
 
+def t_ATTRIBUTE(t):
+    r'\w+=[^\) ,]*'
+    return t
+
 # Expressões regulares para cada token
+def t_VIRG(t):
+    r','
+    return t
+
+def t_PA(t):
+    r'\('
+    return t
+
+def t_PF(t):
+    r'\)'
+    return t
+
 def t_IF(t):
     r'if'
     return t
@@ -47,9 +67,6 @@ def t_TEXT(t):
     r'(\w+\s*\w*)+'
     return t
 
-def t_ATTRIBUTE(t):
-    r'\(\w*(=("[^"]*"|\'[^\']*\'))?\)'
-    return t
 
 # Define a rule so we can track line numbers
 def t_newline(t):
