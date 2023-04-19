@@ -3,7 +3,10 @@ import ply.lex as lex
 # Definição dos tokens
 tokens = (
     'ATTRIBUTE',
-    'ATTRIBUTE_CONDITIONAL',
+    'ATTRIBUTE_NAME',
+    'ATTRIBUTE_VALUE',
+    'ATTRIBUTE_THEN',
+    'ATTRIBUTE_ELSE',
     'VIRG',
     'PA',
     'PF'
@@ -18,11 +21,28 @@ tokens = (
     'VAR'
 )
 
+# Expressões regulares para cada token
+def t_ATTRIBUTE_NAME(t):
+    r'\w+(?==)'
+    return t
+
+def t_ATTRIBUTE_VALUE(t):
+    r'\w+(?= )'
+    return t
+
+def t_ATTRIBUTE_THEN(t):
+    r"[a-z' ]+(?=:)"
+
+    return t
+
+def t_ATTRIBUTE_ELSE(t):
+    r"'[a-z']+(?=))"
+    return t
+
 def t_ATTRIBUTE(t):
     r'\w+=[^\) ,]*'
     return t
 
-# Expressões regulares para cada token
 def t_VIRG(t):
     r','
     return t
@@ -52,7 +72,7 @@ def t_VAR(t):
     return t
 
 def t_TAG(t): 
-    r'[a-zA-Z]\w*'
+    r'\w+(?<=\t)|\w+(?=\()|^\w+(?=\n)'
     return t
 
 def t_ID(t):
