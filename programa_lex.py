@@ -1,5 +1,9 @@
 import ply.lex as lex
 
+states = (
+    ('dentro_ponto','exclusive'),
+)
+
 # Definição dos tokens
 tokens = (
     'ATTRIBUTE',
@@ -14,6 +18,7 @@ tokens = (
     'ID',
     'CLASS',
     'TEXT',
+    'BLOCK_TEXT',
     'IF',
     'ELSE',
     'PONTO',
@@ -22,6 +27,21 @@ tokens = (
 )
 
 # Expressões regulares para cada token
+
+def t_PONTO(t):
+    r'\.(?=\n)'
+    t.lexer.beggin('dentro_ponto')
+    return t
+
+def t_dentro_ponto_BLOCK_TEXT(t):
+    tabs += r'^\t+'
+    t.lexer.tabs = tabs.count('\t')
+    
+    print(t.lexer.tabs)
+
+    r'\w[^\n]'
+    return t
+
 def t_ATTRIBUTE_NAME(t):
     r'\w+(?==)'
     return t
@@ -36,7 +56,7 @@ def t_ATTRIBUTE_THEN(t):
     return t
 
 def t_ATTRIBUTE_ELSE(t):
-    r"'[a-z']+(?=))"
+    r"'[a-z']+(?=\))"
     return t
 
 def t_ATTRIBUTE(t):
@@ -101,6 +121,8 @@ def t_error(t):
     t.lexer.skip(1)
 
 lexer = lex.lex()
+
+lexer.tabs = 0
 
 pug = '''
 html(lang="en")
