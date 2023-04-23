@@ -28,7 +28,10 @@ tokens = (
     'BLOCK_TEXT',
     'IF',
     'ELSE',
-    'VAR'
+    'VAR_JS',
+    'VAR_NAME',
+    'VAR_VALUE',
+    'EQUALS'
 )
 
 # Expressões regulares para cada token
@@ -64,6 +67,10 @@ def t_ELSE(t):
     r'else'
     return t
 
+def t_EQUALS(t):
+    r'='
+    return t
+
 def t_atributeState_ATTRIBUTE_ELSE(t):
     r"['\w ]+(?=\))"
     return t
@@ -73,7 +80,19 @@ def t_atributeState_ATTRIBUTE_THEN(t):
     return t
 
 def t_atributeState_ATTRIBUTE(t):
-    r'((?<=\()|(?<=[, ]))[ ]?\w+=[ ]?[^ ,\)\n]+'
+    r'(?<=[, \t\(])[ ]?\w+=[ ]?[^ ,\)\n]+'
+    return t
+
+def t_VAR_JS(t):
+    r'-[ ]?var'
+    return t
+
+def t_VAR_NAME(t):
+    r'(?<=\bvar\s)\w+'
+    return t
+
+def t_VAR_VALUE(t):
+    r'((?<==)|(?<==\s))[\"]?\w+[\"]?'
     return t
 
 def t_TAG(t): 
@@ -102,36 +121,29 @@ def t_atributeState_PF(t):
     t.lexer.begin('INITIAL')
     return t
 
-def t_VAR(t):
-    r'\w*(?<=\()'
-    return t
-
 def t_TEXT(t):   
     r'(?<= )[^\n]+'
-    return t
-
-def t_dentroPonto_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-
-    tabs_count = 0
-    for char in t.lexer.lexdata[t.lexer.lexpos:]:
-        if char == ' ':
-            tabs_count += 1
-        elif char == '\t':
-            tabs_count += 4
-        else:
-            break
-
-    if tabs_count < t.lexer.tabs:
-        t.lexer.pop_state()
-
-    t.lexer.tabs = tabs_count
+    return t  
 
 # Define a rule so we can track line numbers
-def t_newline(t):
+def t_ANY_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
+    if t.lexer.current_state() == 'dentroPonto':
+        tabs_count = 0
+        for char in t.lexer.lexdata[t.lexer.lexpos:]:
+            if char == ' ':
+                tabs_count += 1
+            elif char == '\t':
+                tabs_count += 4
+            else:
+                break
+
+        if tabs_count < t.lexer.tabs:
+            t.lexer.pop_state()
+
+        t.lexer.tabs = tabs_count
 
 # Ignora espaços em branco e tabulações
 t_ANY_ignore = ' \t'
@@ -165,9 +177,16 @@ html(lang="en")
 			li Item B
 			li Item C
 		img(src='./logi?n_icon', alt='login' style='width:100px;height:100px;')
-		body(class=authenticated ? authed :'anon')
+		-var authenticated = true
+		- var varia = "authed"
+		body(class=authenticated ? varia :'anon')
 		a: img
 		table: h1: h2: a AAAA
+
+		input(
+			type='checkbox'
+			name='agreement'
+		)
 '''
 
 lexer.input(pug)
