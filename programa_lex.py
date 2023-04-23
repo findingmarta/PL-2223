@@ -2,11 +2,19 @@ import ply.lex as lex
 
 states = (
     ('dentroPonto','exclusive'),
+    ('atributeState', 'exclusive'),
 )
+
+#literals = ['.', '=', '+', '-', '*', '/', ',', ':', '#', '|', '"', "'",'(',')']
+
+# FALTA AS SELF CLOSING TAGS (ver no yacc se calhar)
 
 # Definição dos tokens
 tokens = (
     'ATTRIBUTE',
+    'QUESTION_MARK',
+    'COMMA',
+    'TWO_POINTS',
     'ATTRIBUTE_THEN',
     'ATTRIBUTE_ELSE',
     'PA',
@@ -14,7 +22,7 @@ tokens = (
     'TAG',
     'HASHTAG',
     'ID',
-    'PONTO',
+    'POINT',
     'CLASS',
     'TEXT',
     'BLOCK_TEXT',
@@ -22,7 +30,6 @@ tokens = (
     'ELSE',
     'VAR'
 )
-
 
 # Expressões regulares para cada token
 def t_ANY_enter_dentroPonto(t):
@@ -41,7 +48,7 @@ def t_ID(t):
     r'(?<=\#)\w+'
     return t
 
-def t_PONTO(t):
+def t_POINT(t):
     r'\.'
     return t
 
@@ -57,29 +64,42 @@ def t_ELSE(t):
     r'else'
     return t
 
-def t_ATTRIBUTE(t):
-    r'(?<=\()[^\)]+'
+def t_atributeState_ATTRIBUTE_ELSE(t):
+    r"['\w ]+(?=\))"
+    return t
+
+def t_atributeState_ATTRIBUTE_THEN(t):
+    r"['\w ]+(?=:)"
+    return t
+
+def t_atributeState_ATTRIBUTE(t):
+    r'((?<=\()|(?<=[, ]))[ ]?\w+=[ ]?[^ ,\)\n]+'
     return t
 
 def t_TAG(t): 
-    r'\w+(?=[\(\.\=])|(?<=\t)\w+'
+    r'[a-z]\w*(?=[\(\.\=:])|(?<=\t)[a-z]\w+|[a-z]\w*'
     return t
 
-
-def t_ATTRIBUTE_THEN(t):
-    r"[a-z' ]+(?=:)"
+def t_atributeState_COMMA(t):
+    r','
     return t
 
-def t_ATTRIBUTE_ELSE(t):
-    r"'[a-z']+(?=\))"
+def t_atributeState_QUESTION_MARK(t):
+    r'\?'
+    return t
+
+def t_ANY_TWO_POINTS(t):
+    r':'        
     return t
 
 def t_PA(t):
     r'\('
+    t.lexer.begin('atributeState')
     return t
 
-def t_PF(t):
+def t_atributeState_PF(t):
     r'\)'
+    t.lexer.begin('INITIAL')
     return t
 
 def t_VAR(t):
@@ -114,7 +134,7 @@ def t_newline(t):
     t.lexer.lineno += len(t.value)
 
 # Ignora espaços em branco e tabulações
-t_ANY_ignore = ' \t='
+t_ANY_ignore = ' \t'
 
 def t_ANY_error(t):
     print('Illegal character: ', t.value[0], ' Line: ', t.lexer.lineno)
@@ -140,6 +160,14 @@ html(lang="en")
 				p.
 					Pug is a terse and simple templating language with a
 					strong focus on performance and powerful features
+		ul
+			li Item A
+			li Item B
+			li Item C
+		img(src='./logi?n_icon', alt='login' style='width:100px;height:100px;')
+		body(class=authenticated ? authed :'anon')
+		a: img
+		table: h1: h2: a AAAA
 '''
 
 lexer.input(pug)
