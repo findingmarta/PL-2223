@@ -1,8 +1,9 @@
 import ply.lex as lex
 
 states = (
-    ('dentroPonto','exclusive'),
+    ('pointState','exclusive'),
     ('atributeState', 'exclusive'),
+    ('conditionalState', 'exclusive'),
 )
 
 #literals = ['.', '=', '+', '-', '*', '/', ',', ':', '#', '|', '"', "'",'(',')']
@@ -15,8 +16,8 @@ tokens = (
     'QUESTION_MARK',
     'COMMA',
     'TWO_POINTS',
-    'ATTRIBUTE_THEN',
-    'ATTRIBUTE_ELSE',
+    'ATTRIBUTE_VALUE',
+    'ATTRIBUTE_VAR',
     'PA',
     'PF',
     'TAG',
@@ -31,15 +32,16 @@ tokens = (
     'VAR_JS',
     'VAR_NAME',
     'VAR_VALUE',
-    'EQUALS'
+    'EQUALS',
+    'PLUS'
 )
 
 # Expressões regulares para cada token
-def t_ANY_enter_dentroPonto(t):
+def t_ANY_enter_pointState(t):
     r'\.(?=\n)'
-    t.lexer.push_state('dentroPonto')
+    t.lexer.push_state('pointState')
 
-def t_dentroPonto_BLOCK_TEXT(t):   
+def t_pointState_BLOCK_TEXT(t):   
     r'[^\t\n]+'
     return t
 
@@ -48,7 +50,7 @@ def t_HASHTAG(t):
     return t
 
 def t_ID(t):
-    r'(?<=\#)\w+'
+    r'(?<=\#)[a-zA-Z0-9\-]+'
     return t
 
 def t_POINT(t):
@@ -61,6 +63,7 @@ def t_CLASS(t):
 
 def t_IF(t):
     r'if'
+    t.lexer.push_state('conditionalState')
     return t
 
 def t_ELSE(t):
@@ -71,28 +74,32 @@ def t_EQUALS(t):
     r'='
     return t
 
-def t_atributeState_ATTRIBUTE_ELSE(t):
-    r"['\w ]+(?=\))"
-    return t
-
-def t_atributeState_ATTRIBUTE_THEN(t):
-    r"['\w ]+(?=:)"
+def t_ANY_PLUS(t):
+    r'\+'
     return t
 
 def t_atributeState_ATTRIBUTE(t):
-    r'(?<=[, \t\(])[ ]?\w+=[ ]?[^ ,\)\n]+'
+    r'(?<=[, \t\(])[ ]?\w+=[ ]?'
+    return t
+
+def t_atributeState_ATTRIBUTE_VALUE(t):
+    r"(?<=[= ,?:])['\"][^\n ]+['\"]"
+    return t
+
+def t_atributeState_ATTRIBUTE_VAR(t):
+    r"(?<=[= ,?:])[\w\-']+"
     return t
 
 def t_VAR_JS(t):
-    r'-[ ]?var'
+    r'-[ ]?var(?=\s)|-'
     return t
 
-def t_VAR_NAME(t):
-    r'(?<=\bvar\s)\w+'
+def t_INITIAL_conditionalState_VAR_NAME(t):
+    r'(?<=\bvar\s)\w+|(?<=-\s)\w+|(?<=-)\w+|(?<=\bif\s)\w+'
     return t
 
 def t_VAR_VALUE(t):
-    r'((?<==)|(?<==\s))[\"]?\w+[\"]?'
+    r'((?<==)|(?<==\s))\S+'
     return t
 
 def t_TAG(t): 
@@ -113,10 +120,11 @@ def t_ANY_TWO_POINTS(t):
 
 def t_PA(t):
     r'\('
-    t.lexer.begin('atributeState')
+    if t.lexer.current_state() == 'INITIAL':    
+        t.lexer.begin('atributeState')
     return t
 
-def t_atributeState_PF(t):
+def t_atributeState_conditionalState_PF(t):
     r'\)'
     t.lexer.begin('INITIAL')
     return t
@@ -130,7 +138,7 @@ def t_ANY_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-    if t.lexer.current_state() == 'dentroPonto':
+    if t.lexer.current_state() == 'pointState':
         tabs_count = 0
         for char in t.lexer.lexdata[t.lexer.lexpos:]:
             if char == ' ':
@@ -144,6 +152,9 @@ def t_ANY_newline(t):
             t.lexer.pop_state()
 
         t.lexer.tabs = tabs_count
+
+    elif t.lexer.current_state() == 'conditionalState':
+        t.lexer.pop_state()
 
 # Ignora espaços em branco e tabulações
 t_ANY_ignore = ' \t'
@@ -179,6 +190,7 @@ html(lang="en")
 		img(src='./logi?n_icon', alt='login' style='width:100px;height:100px;')
 		-var authenticated = true
 		- var varia = "authed"
+
 		body(class=authenticated ? varia :'anon')
 		a: img
 		table: h1: h2: a AAAA
@@ -187,9 +199,39 @@ html(lang="en")
 			type='checkbox'
 			name='agreement'
 		)
+
+		-varia = 'https://example.com/'
+		a(href='/' + url) Link
+		a(href=url) Another link
+
+        a.button
+        .content
+
+        a#main-link
+        #content
+
+		- var user = 'foo bar baz'
+		- var authorised = false
+		#user
+			if user
+				h2.green Description
+				p.description= user
+			else if (authorised == 2 && 1 < 3)
+				h2.blue Description 
+				p.description.
+				User has no description,
+				why not add one...
+			else
+				h2.red Description
+				p.description User has no description
 '''
 
+
+#with open('datasets/ex1.pug', 'r') as pug:
+#    pug.readlines()
+
 lexer.input(pug)
+
 
 while tok := lexer.token():
     print(tok)
