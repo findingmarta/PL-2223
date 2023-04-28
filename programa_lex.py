@@ -2,11 +2,12 @@ import ply.lex as lex
 
 states = (
     ('pointState','exclusive'),
+    ('barState','exclusive'),
     ('atributeState', 'exclusive'),
     ('conditionalState', 'exclusive'),
 )
 
-#literals = ['.', '=', '+', '-', '*', '/', ',', ':', '#', '|', '"', "'",'(',')']
+literals = ['-', '*', '/', '%', '&', '|', '<', '>']
 
 # FALTA AS SELF CLOSING TAGS (ver no yacc se calhar)
 
@@ -24,6 +25,7 @@ tokens = (
     'HASHTAG',
     'ID',
     'POINT',
+    'BAR',
     'CLASS',
     'TEXT',
     'BLOCK_TEXT',
@@ -33,7 +35,11 @@ tokens = (
     'VAR_NAME',
     'VAR_VALUE',
     'EQUALS',
-    'PLUS'
+    'PLUS',
+    'VAR_COND',
+    'VALUE_COND',
+    'OP_COND',
+    'WHILE'
 )
 
 # Expressões regulares para cada token
@@ -41,7 +47,12 @@ def t_ANY_enter_pointState(t):
     r'\.(?=\n)'
     t.lexer.push_state('pointState')
 
-def t_pointState_BLOCK_TEXT(t):   
+def t_ANY_enter_barState(t):
+    r'(?<=\t)\|'
+    if(t.lexer.current_state() == 'INITIAL'):
+        t.lexer.push_state('barState')
+
+def t_pointState_barState_BLOCK_TEXT(t):   
     r'[^\t\n]+'
     return t
 
@@ -57,6 +68,10 @@ def t_POINT(t):
     r'\.'
     return t
 
+def t_BAR(t):
+    r'\|'
+    return t
+
 def t_CLASS(t):
     r'(?<=\.)\w+'
     return t
@@ -66,11 +81,16 @@ def t_IF(t):
     t.lexer.push_state('conditionalState')
     return t
 
+def t_WHILE(t):
+    r'while'
+    t.lexer.push_state('conditionalState')
+    return t
+
 def t_ELSE(t):
     r'else'
     return t
 
-def t_EQUALS(t):
+def t_ANY_EQUALS(t):
     r'='
     return t
 
@@ -94,12 +114,12 @@ def t_VAR_JS(t):
     r'-[ ]?var(?=\s)|-'
     return t
 
-def t_INITIAL_conditionalState_VAR_NAME(t):
+def t_VAR_NAME(t):
     r'(?<=\bvar\s)\w+|(?<=-\s)\w+|(?<=-)\w+|(?<=\bif\s)\w+'
     return t
 
 def t_VAR_VALUE(t):
-    r'((?<==)|(?<==\s))\S+'
+    r"((?<=\=)|(?<==\s))['\"]?[^\n\t\+\-\*\&\|]+[\"']?"
     return t
 
 def t_TAG(t): 
@@ -118,7 +138,7 @@ def t_ANY_TWO_POINTS(t):
     r':'        
     return t
 
-def t_PA(t):
+def t_conditionalState_INITIAL_PA(t):
     r'\('
     if t.lexer.current_state() == 'INITIAL':    
         t.lexer.begin('atributeState')
@@ -126,11 +146,24 @@ def t_PA(t):
 
 def t_atributeState_conditionalState_PF(t):
     r'\)'
-    t.lexer.begin('INITIAL')
+    if t.lexer.current_state() == 'atributeState':
+        t.lexer.begin('INITIAL')
+    return t
+
+def t_conditionalState_VAR_COND(t):
+    r'[a-z]\w*'
+    return t
+
+def t_conditionalState_VALUE_COND(t):
+    r'\d+'
+    return t
+
+def t_conditionalState_OP_COND(t):
+    r'\d+'
     return t
 
 def t_TEXT(t):   
-    r'(?<= )[^\n]+'
+    r'((?<= )|(?<=\|))[^\n]+'
     return t  
 
 # Define a rule so we can track line numbers
@@ -138,7 +171,7 @@ def t_ANY_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-    if t.lexer.current_state() == 'pointState':
+    if t.lexer.current_state() == 'pointState' or t.lexer.current_state() == 'barState':
         tabs_count = 0
         for char in t.lexer.lexdata[t.lexer.lexpos:]:
             if char == ' ':
@@ -148,7 +181,9 @@ def t_ANY_newline(t):
             else:
                 break
 
-        if tabs_count < t.lexer.tabs:
+        if tabs_count < t.lexer.tabs and t.lexer.current_state() == 'pointState':
+            t.lexer.pop_state()
+        elif tabs_count != t.lexer.tabs and t.lexer.current_state() == 'barState':
             t.lexer.pop_state()
 
         t.lexer.tabs = tabs_count
@@ -216,7 +251,7 @@ html(lang="en")
 			if user
 				h2.green Description
 				p.description= user
-			else if (authorised == 2 && 1 < 3)
+			else if (authorised == 2 && 1 < 3 || 2*(1+2) <= 5)
 				h2.blue Description 
 				p.description.
 				User has no description,
@@ -224,6 +259,17 @@ html(lang="en")
 			else
 				h2.red Description
 				p.description User has no description
+		p
+			| The pipe always goes at the beginning of its own line,
+			| not counting indentation.
+			| sada
+			| asd
+		
+		- var n = 0
+		ul
+			while n < 4
+				body(type= n++)
+				li= n++
 '''
 
 
