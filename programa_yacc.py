@@ -3,7 +3,126 @@ import ply.yacc as yacc
 from programa_lex import tokens
 
 
+variaveis = {}
+
+
 # Regras de produção da gramática
+def p_elemList(p):
+    """elemList : elemList elem
+                | empty
+    """
+    if len(p) == 2:
+        p[0] = p[1] + p[2]
+    else:
+        pass
+
+def p_elem(p):
+    """
+    elem : INDENT tag elemList
+         | INDENT condition
+         | INDENT VAR_JS VAR_NAME EQUALS VAR_VALUE
+         | INDENT BLOCK_TEXT
+         | TEXT
+    """
+    if len(p) == 4:
+        p[0] = (p[1] * p[1].value) + f"<{p[1]}>" + p[3] + '\n'
+    elif len(p) == 6:
+        variaveis[p[3]] = p[5]
+    elif len(p) == 3:
+        p[0] = (p[1] * p[1].value) + p[2]
+    elif len(p) == 2:
+        p[0] = p[1]
+
+def p_tag(p):
+    """
+    tag : TAG PA atributos PF
+        | TAG HASHTAG ID
+        | HASHTAG ID
+        | TAG POINT CLASS
+        | TAG
+    """
+    if len(p) == 5:
+        p[0] = p[1] + " " + p[3]
+    elif len(p) == 4:
+        p[0] = p[1] + p[3].type.lower() + "=" + p[3]
+    elif len(p) == 3:
+        p[0] = "div id=" + p[2]
+    elif len(p) == 2:
+        p[0] = p[1]
+
+def p_conditon(p):
+    """
+    condition : IF cond elemList INDENT ELSE elemList
+              | IF cond elemList
+              | WHILE cond elemList
+    """
+
+def p_cond(p):
+    """
+    cond : cond & & cond 
+         | cond | | cond 
+         | cond < cond
+         | cond <= cond
+         | cond > cond
+         | cond >= cond
+         | cond == cond
+         | cond != cond
+         | express
+    """
+
+def p_express(p):
+    """
+    express : express PLUS term
+            | express - term
+            | term
+    """
+
+def p_term(p):
+    """
+    term : term * factor 
+         | term / factor
+         | factor
+    """
+    p[0] = p[1]
+
+def p_factor(p):
+    """
+    factor : PA express PF
+           | VAR_COND
+           | VALUE_COND
+    """
+
+def p_atributos(p):
+    """
+    atributos : atributos atributo
+              | atributos COMMA atributo 
+              | atributo 
+    """
+
+def p_atributo(p):
+    """
+    atributo : ATTRIBUTE atr 
+             | ATTRIBUTE atr QUESTION_MARK atr TWO_POINTS atr 
+    """
+
+def p_atr(p):
+    """
+    atr : ATTRIBUTE_VALUE
+        | ATTRIBUTE_VAR
+    """
+
+
+
+
+
+
+
+
+
+
+
+
+
 def p_tag(p):
     'tag : TAG'
     p[0] = '<{}>'.format(p[1])
@@ -91,9 +210,10 @@ def parse_file(file_path):
 
 def pug_to_html(pug_file):
     pug_code = parse_file(pug_file)
-    html_code = ''
-    parser.parse(pug_code, tracking=True, debug=False)
-    return html_code
+    html_code = parser.parse(pug_code, tracking=False, debug=False)
+    
+    with open("outputs/output1.html", "w", encoding="utf-8") as f:
+        f.write(html_code)
 
 if __name__ == '__main__':
-    print(pug_to_html('datasets/ex1.pug'))
+    pug_to_html('datasets/ex1.pug')

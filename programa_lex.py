@@ -39,12 +39,14 @@ tokens = (
     'VAR_COND',
     'VALUE_COND',
     'OP_COND',
-    'WHILE'
+    'WHILE',
+    'INDENT'
 )
 
 # Expressões regulares para cada token
 def t_ANY_enter_pointState(t):
     r'\.(?=\n)'
+    t.lexer.block_indent = True
     t.lexer.push_state('pointState')
 
 def t_ANY_enter_barState(t):
@@ -171,25 +173,31 @@ def t_ANY_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
-    if t.lexer.current_state() == 'pointState' or t.lexer.current_state() == 'barState':
-        tabs_count = 0
-        for char in t.lexer.lexdata[t.lexer.lexpos:]:
-            if char == ' ':
-                tabs_count += 1
-            elif char == '\t':
-                tabs_count += 4
-            else:
-                break
+    tabs_count = 0
+    for char in t.lexer.lexdata[t.lexer.lexpos:]:
+        if char == ' ':
+            tabs_count += 1
+        elif char == '\t':
+            tabs_count += 4
+        else:
+            break
 
-        if tabs_count < t.lexer.tabs and t.lexer.current_state() == 'pointState':
+    if t.lexer.current_state() == 'pointState':
+        if t.lexer.block_indent:
+            t.lexer.indent = t.lexer.tabs
+            t.lexer.block_indent = False
+        if tabs_count <= t.lexer.indent:            
             t.lexer.pop_state()
-        elif tabs_count != t.lexer.tabs and t.lexer.current_state() == 'barState':
-            t.lexer.pop_state()
-
-        t.lexer.tabs = tabs_count
-
+    elif tabs_count != t.lexer.tabs and t.lexer.current_state() == 'barState':
+        t.lexer.pop_state()
     elif t.lexer.current_state() == 'conditionalState':
         t.lexer.pop_state()
+
+    t.lexer.tabs = tabs_count
+    t.type = "INDENT"
+    t.value = tabs_count
+    return t
+
 
 # Ignora espaços em branco e tabulações
 t_ANY_ignore = ' \t'
@@ -201,6 +209,8 @@ def t_ANY_error(t):
 lexer = lex.lex()
 
 lexer.tabs = 0
+lexer.block_indent = False
+lexer.indent = 0
 
 pug = '''
 html(lang="en")
@@ -254,8 +264,8 @@ html(lang="en")
 			else if (authorised == 2 && 1 < 3 || 2*(1+2) <= 5)
 				h2.blue Description 
 				p.description.
-				User has no description,
-				why not add one...
+				    User has no description,
+				    why not add one...
 			else
 				h2.red Description
 				p.description User has no description
@@ -266,10 +276,20 @@ html(lang="en")
 			| asd
 		
 		- var n = 0
+
+        script.
+            if 1+1 == 2
+                title
+                BBBBB
+            else
+                AAAAA
+
+		//just some paragraphs
 		ul
 			while n < 4
 				body(type= n++)
 				li= n++
+                li exp=sfaew
 '''
 
 
