@@ -1,15 +1,16 @@
 import ply.lex as lex
 
+total_idents = 0
+total_dedents = 0
+
 states = (
     ('pointState','exclusive'),
     ('barState','exclusive'),
     ('atributeState', 'exclusive'),
     ('conditionalState', 'exclusive'),
+    ('dedent', 'exclusive')
 )
 
-literals = ['-', '*', '/', '%', '&', '|', '<', '>']
-
-# FALTA AS SELF CLOSING TAGS (ver no yacc se calhar)
 
 # Definição dos tokens
 tokens = (
@@ -25,7 +26,6 @@ tokens = (
     'HASHTAG',
     'ID',
     'POINT',
-    'BAR',
     'CLASS',
     'TEXT',
     'BLOCK_TEXT',
@@ -36,11 +36,24 @@ tokens = (
     'VAR_VALUE',
     'EQUALS',
     'PLUS',
+    'MENOS',
+    'MAIOR',
+    'MENOR',
+    'DIF',
+    'MULT',
+    'DIV',
+    'CONJ',
+    'DIJ',
+    'NEG',
+    'EQUIVALENCIA',
+    'MAIORIGUAL',
+    'MENORIGUAL',
+    'MODULO',
     'VAR_COND',
     'VALUE_COND',
-    'OP_COND',
     'WHILE',
-    'INDENT'
+    'INDENT',
+    'DEDENT'
 )
 
 # Expressões regulares para cada token
@@ -70,10 +83,6 @@ def t_POINT(t):
     r'\.'
     return t
 
-def t_BAR(t):
-    r'\|'
-    return t
-
 def t_CLASS(t):
     r'(?<=\.)\w+'
     return t
@@ -92,12 +101,60 @@ def t_ELSE(t):
     r'else'
     return t
 
+def t_ANY_EQUIVALENCIA(t):
+    r'=='
+    return t
+
 def t_ANY_EQUALS(t):
     r'='
     return t
 
 def t_ANY_PLUS(t):
     r'\+'
+    return t
+def t_ANY_DIJ(t):
+    r'\|\|'
+    return t
+
+def t_ANY_DIF(t):
+    r'!='
+    return t
+
+
+def t_ANY_DIV(t):
+    r'\/'
+    return t
+
+def t_ANY_MULT(t):
+    r'\*'
+    return t
+
+def t_ANY_CONJ(t):
+    r'&&'
+    return t
+
+def t_ANY_MAIORIGUAL(t):
+    r'>='
+    return t
+
+def t_ANY_MENORIGUAL(t):
+    r'<='
+    return t
+
+def t_ANY_MAIOR(t):
+    r'\>'
+    return t
+
+def t_ANY_MENOR(t):
+    r'\<'
+    return t
+
+def t_ANY_NEG(t):
+    r'\!'
+    return t
+
+def t_ANY_MODULO(t):
+    r'\%'
     return t
 
 def t_atributeState_ATTRIBUTE(t):
@@ -136,6 +193,10 @@ def t_atributeState_QUESTION_MARK(t):
     r'\?'
     return t
 
+def t_ANY_MENOS(t):
+    r'\-'
+    return t
+
 def t_ANY_TWO_POINTS(t):
     r':'        
     return t
@@ -157,10 +218,6 @@ def t_conditionalState_VAR_COND(t):
     return t
 
 def t_conditionalState_VALUE_COND(t):
-    r'\d+'
-    return t
-
-def t_conditionalState_OP_COND(t):
     r'\d+'
     return t
 
@@ -193,10 +250,28 @@ def t_ANY_newline(t):
     elif t.lexer.current_state() == 'conditionalState':
         t.lexer.pop_state()
 
-    t.lexer.tabs = tabs_count
-    t.type = "INDENT"
-    t.value = tabs_count
-    return t
+    global total_indents, total_dedents
+    if tabs_count > t.lexer.tabs:
+        t.type = 'INDENT'
+        t.value = tabs_count - t.lexer.tabs
+        t.lexer.tabs = tabs_count
+        return t
+    elif tabs_count < t.lexer.tabs:
+        total_dedents = (t.lexer.tabs - tabs_count) / 4
+        t.lexer.push_state('dedent')
+        t.lexer.tabs = tabs_count
+
+
+def t_dedent_DEDENT(t):
+    r'(.|\n)'
+    global total_dedents
+    t.lexer.lexpos -= 1
+    if total_dedents > 0:
+        total_dedents -= 1
+        t.value = 4
+        return t
+    else:
+        t.lexer.pop_state()
 
 
 # Ignora espaços em branco e tabulações
@@ -213,7 +288,6 @@ lexer.block_indent = False
 lexer.indent = 0
 
 pug = '''
-html(lang="en")
 	head
 		title= pageTitle
 			script(type='text/javascript').
@@ -245,7 +319,7 @@ html(lang="en")
 			name='agreement'
 		)
 
-		-varia = 'https://example.com/'
+		-url = 'https://example.com/'
 		a(href='/' + url) Link
 		a(href=url) Another link
 
@@ -292,12 +366,7 @@ html(lang="en")
                 li exp=sfaew
 '''
 
-
-#with open('datasets/ex1.pug', 'r') as pug:
-#    pug.readlines()
-
 lexer.input(pug)
-
 
 while tok := lexer.token():
     print(tok)

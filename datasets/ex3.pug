@@ -1,0 +1,25 @@
+html
+	head
+		h1 Pug - node template engine
+
+	body
+		-var variavel = 3
+		-var user = false
+		-var authenticated = true
+		#user
+			if authorised == 2 && 1 < 3 || 2*(1+2) <= 5
+				h2.green Description
+				p.description
+			else if variavel + 3 == 6 && !user
+				h2.blue Description 
+				p.
+				    User has no description,
+				    why not add one...
+			else
+				h2.red Description
+				p.description User has no description
+		p
+			| The pipe always goes at the beginning of its own line,
+			| not counting indentation.
+			| sada
+			| asd

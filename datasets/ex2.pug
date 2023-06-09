@@ -1,0 +1,40 @@
+html(lang="en")
+	ul
+		li Item A
+		li Item B
+		li Item C
+	img(src='./logi?n_icon', alt='login' style='width:100px;height:100px;')
+	-var authenticated = true
+	- var varia = "authed"
+
+	body(class=authenticated ? varia :'anon')
+
+	-url = 'https://example.com/'
+	a(href='/' + url) Link
+	a(href=url) Another link
+
+	a.button
+	.content
+
+	a#main-link
+	#content
+
+	- var user = false
+	- var authorised = true
+	#user
+		if user
+			h2.green Description
+			p.description
+		else if (authorised)
+			h2.blue Description 
+			p.
+				User has no description,
+				why not add one...
+		else
+			h2.red Description
+			p.description User has no description
+	p
+		| The pipe always goes at the beginning of its own line,
+		| not counting indentation.
+		| sada
+		| asd
